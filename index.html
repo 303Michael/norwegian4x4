@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Norwegian 4×4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --border: #1e1e2e;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --accent: #c8ff00;
+    --zone-low: #3a7bd5;
+    --zone-target: #c8ff00;
+    --zone-over: #ff4444;
+    --recovery: #3a7bd5;
+    --work: #c8ff00;
+    --warmup: #ff9500;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; width: 100%; max-width: 480px; padding: 24px 20px; flex-direction: column; min-height: 100dvh; }
+  .screen.active { display: flex; }
+
+  /* ── SETUP SCREEN ── */
+  .app-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 0.12em; color: var(--accent); margin-bottom: 4px; }
+  .app-sub   { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 28px; }
+
+  .section-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+
+  .input-row { display: flex; align-items: center; gap: 12px; }
+  .input-row label { font-size: 0.9rem; color: var(--muted); flex: 1; }
+
+  input[type="number"] {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 1.1rem;
+    padding: 8px 12px; width: 90px; text-align: center; outline: none; -webkit-appearance: none;
+  }
+  input[type="number"]:focus { border-color: var(--accent); }
+
+  .formula-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0; }
+  .formula-card {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 8px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .formula-card.selected { border-color: var(--accent); background: rgba(200,255,0,0.06); }
+  .formula-name { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
+  .formula-val  { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--text); letter-spacing: 0.05em; }
+  .formula-card.selected .formula-val { color: var(--accent); }
+
+  .manual-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .manual-row label { font-size: 0.82rem; color: var(--muted); flex: 1; }
+
+  .hr-zone-preview { display: flex; gap: 6px; margin-top: 12px; }
+  .zone-chip { flex: 1; border-radius: 6px; padding: 6px 4px; text-align: center; font-size: 0.68rem; font-weight: 500; }
+  .zone-chip span { display: block; font-family: 'DM Mono', monospace; font-size: 0.8rem; margin-bottom: 2px; }
+
+  /* Warmup stepper */
+  .stepper-row { display: flex; align-items: center; gap: 10px; }
+  .stepper-row label { font-size: 0.9rem; color: var(--muted); flex: 1; }
+  .stepper { display: flex; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .stepper-btn { background: none; border: none; color: var(--text); font-size: 1.2rem; padding: 6px 14px; cursor: pointer; line-height: 1; transition: background 0.1s; }
+  .stepper-btn:active { background: var(--border); }
+  .stepper-val { font-family: 'DM Mono', monospace; font-size: 1rem; min-width: 52px; text-align: center; color: var(--text); }
+  .warmup-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; }
+
+  /* BLE */
+  .ble-row    { display: flex; align-items: center; gap: 12px; }
+  .ble-status { flex: 1; font-size: 0.85rem; }
+  .ble-hr     { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--accent); letter-spacing: 0.05em; min-width: 60px; text-align: right; }
+  .ble-dot    { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; margin-right: 6px; transition: background 0.3s; }
+  .ble-dot.connected { background: var(--accent); animation: pulse 1.5s infinite; }
+  .ble-dot.scanning  { background: var(--zone-low); animation: pulse 0.6s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Brave help panel */
+  .brave-help {
+    display: none; margin-top: 10px; padding: 10px 12px;
+    background: rgba(255,149,0,0.07); border: 1px solid rgba(255,149,0,0.25);
+    border-radius: 8px;
+  }
+  .brave-help.visible { display: block; }
+  .brave-help-title { font-size: 0.75rem; font-weight: 600; color: #ff9500; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .brave-help ol { padding-left: 16px; margin: 0; }
+  .brave-help li { font-size: 0.75rem; color: var(--muted); line-height: 1.7; }
+  .brave-help li strong { color: var(--text); }
+
+  /* Buttons */
+  .btn { border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.04em; padding: 14px 20px; cursor: pointer; transition: opacity 0.15s, transform 0.1s; width: 100%; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary   { background: var(--accent); color: #0a0a0f; }
+  .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-sm        { padding: 9px 14px; font-size: 0.8rem; border-radius: 8px; width: auto; }
+  .btn:disabled  { opacity: 0.4; cursor: not-allowed; }
+
+  /* ═══════════════════════════════════════════
+     WORKOUT SCREEN
+  ════════════════════════════════════════════ */
+  #screen-workout { justify-content: space-between; padding: 16px 20px 20px; max-width: 100%; }
+
+  .workout-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+  .phase-label    { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .interval-dots  { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); transition: background 0.3s, border-color 0.3s; }
+  .dot.done   { background: var(--muted); border-color: var(--muted); }
+  .dot.active { background: var(--accent); border-color: var(--accent); }
+
+  /* Portrait: timer stacked above HR */
+  .workout-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 4px 0;
+    min-height: 0;
+  }
+
+  .timer-block { text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+  .phase-name {
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+    margin-bottom: 0; transition: color 0.4s;
+  }
+
+  /* Large timer — vmin keeps it readable in both orientations */
+  .timer-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(5rem, 28vw, 12rem);
+    line-height: 0.92;
+    letter-spacing: 0.04em;
+    transition: color 0.4s;
+  }
+
+  /* HR block */
+  .hr-block {
+    text-align: center; padding: 12px 24px 10px; border-radius: 14px;
+    border: 2px solid var(--border); background: var(--surface);
+    transition: border-color 0.4s, background 0.4s; width: 100%;
+  }
+  .hr-block.zone-low    { border-color: var(--zone-low);    background: rgba(58,123,213,0.08); }
+  .hr-block.zone-target { border-color: var(--zone-target); background: rgba(200,255,0,0.06); }
+  .hr-block.zone-over   { border-color: var(--zone-over);   background: rgba(255,68,68,0.08); }
+
+  /* Large HR number */
+  .hr-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 22vw, 9rem);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    transition: color 0.4s;
+  }
+  .hr-bpm { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; }
+
+  .zone-bar { display: flex; gap: 4px; margin-top: 8px; }
+  .zb { flex: 1; height: 5px; border-radius: 3px; background: var(--border); transition: background 0.4s; }
+  .zb.active      { background: var(--accent); }
+  .zb.active-low  { background: var(--zone-low); }
+  .zb.active-over { background: var(--zone-over); }
+
+  .zone-text { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; transition: color 0.4s; }
+
+  /* Controls */
+  .workout-controls { display: flex; gap: 10px; flex-shrink: 0; }
+  .btn-pause { background: var(--surface); border: 1px solid var(--border); color: var(--text); flex: 1; }
+  .btn-stop  { background: transparent; border: 1px solid #3a1a1a; color: #ff4444; width: 56px; flex: none; font-size: 1.2rem; }
+
+  /* ═══════════════════════════════════════════
+     LANDSCAPE: timer left | HR right
+  ════════════════════════════════════════════ */
+  @media (orientation: landscape) {
+    #screen-workout {
+      max-width: 100%;
+      padding: 10px 20px 12px;
+    }
+
+    .workout-body {
+      flex-direction: row;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    /* Left half: timer */
+    .timer-block {
+      flex: 1;
+      justify-content: center;
+      padding-right: 20px;
+      border-right: 1px solid var(--border);
+    }
+
+    /* Scale to viewport height in landscape */
+    .timer-display {
+      font-size: clamp(3.5rem, 22vh, 9rem);
+    }
+
+    /* Right half: HR */
+    .hr-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      margin: 0;
+      margin-left: 20px;
+      border-radius: 12px;
+    }
+
+    .hr-value {
+      font-size: clamp(3.5rem, 20vh, 8rem);
+    }
+
+    .phase-name { font-size: 0.72rem; }
+    .workout-header { margin-bottom: 2px; }
+  }
+
+  /* ── SUMMARY SCREEN ── */
+  #screen-summary { justify-content: flex-start; gap: 14px; overflow-y: auto; }
+  .summary-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 2px; }
+  .summary-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card     { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .stat-label    { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-val      { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.05em; }
+  .interval-row  { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+  .interval-row:last-child { border-bottom: none; }
+  .interval-row .lbl { color: var(--muted); }
+  .interval-row .val { font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .spacer    { flex: 1; }
+  .mt-8      { margin-top: 8px; }
+  .text-muted{ color: var(--muted); font-size: 0.82rem; }
+  .no-ble-note { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 8px; line-height: 1.5; }
+
+  /* A2HS banner */
+  .a2hs-banner {
+    display: none; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 10px;
+  }
+  .a2hs-banner.visible { display: flex; }
+  .a2hs-text { flex: 1; font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+  .a2hs-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 0.82rem; }
+  .a2hs-dismiss { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 2px 4px; line-height: 1; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1: SETUP
+════════════════════════════════════════════ -->
+<div id="screen-setup" class="screen active">
+
+  <div class="app-title">Norwegian 4×4</div>
+  <div class="app-sub">HIIT Training Protocol</div>
+
+  <!-- Max HR -->
+  <div class="section-label">Max Heart Rate</div>
+  <div class="card">
+    <div class="input-row">
+      <label>Your age</label>
+      <input type="number" id="age-input" min="10" max="100" placeholder="35">
+    </div>
+    <div class="formula-grid">
+      <div class="formula-card" data-formula="fox" onclick="selectFormula('fox')">
+        <div class="formula-name">Fox 1971</div>
+        <div class="formula-val" id="val-fox">—</div>
+      </div>
+      <div class="formula-card" data-formula="tanaka" onclick="selectFormula('tanaka')">
+        <div class="formula-name">Tanaka 2001</div>
+        <div class="formula-val" id="val-tanaka">—</div>
+      </div>
+      <div class="formula-card" data-formula="gulati" onclick="selectFormula('gulati')">
+        <div class="formula-name">Gulati 2010</div>
+        <div class="formula-val" id="val-gulati">—</div>
+      </div>
+    </div>
+    <div class="manual-row">
+      <label>Or enter manually</label>
+      <input type="number" id="manual-hr" min="100" max="230" placeholder="190">
+    </div>
+    <div class="hr-zone-preview" id="zone-preview" style="display:none">
+      <div class="zone-chip" style="background:rgba(58,123,213,0.15);color:var(--zone-low)">
+        <span id="zp-low">—</span>Below
+      </div>
+      <div class="zone-chip" style="background:rgba(200,255,0,0.1);color:var(--zone-target)">
+        <span id="zp-target">—</span>Target
+      </div>
+      <div class="zone-chip" style="background:rgba(255,68,68,0.12);color:var(--zone-over)">
+        <span id="zp-over">—</span>Over
+      </div>
+    </div>
+  </div>
+
+  <!-- Warmup -->
+  <div class="section-label">Warm-up</div>
+  <div class="card">
+    <div class="stepper-row">
+      <label>Duration</label>
+      <div class="stepper">
+        <button class="stepper-btn" onclick="adjustWarmup(-1)">−</button>
+        <div class="stepper-val" id="warmup-val">5 min</div>
+        <button class="stepper-btn" onclick="adjustWarmup(1)">+</button>
+      </div>
+    </div>
+    <div class="warmup-note" id="warmup-note">Easy aerobic effort before first interval. Set to 0 to skip.</div>
+  </div>
+
+  <!-- BLE -->
+  <div class="section-label">Heart Rate Monitor</div>
+  <div class="card">
+    <div class="ble-row">
+      <div class="ble-status">
+        <span class="ble-dot" id="ble-dot"></span>
+        <span id="ble-status-text">Not connected</span>
+      </div>
+      <div class="ble-hr" id="ble-hr-preview">—</div>
+      <button class="btn btn-secondary btn-sm" id="ble-btn" onclick="toggleBLE()">Connect</button>
+    </div>
+    <div class="no-ble-note" id="ble-note">Requires Chrome on Android. Wet the chest strap contacts before pairing.</div>
+    <div class="brave-help" id="brave-help">
+      <div class="brave-help-title">Brave: enable Web Bluetooth</div>
+      <ol>
+        <li>Tap the <strong>lion icon</strong> in the address bar</li>
+        <li>Tap <strong>Advanced controls</strong></li>
+        <li>Set <strong>Block fingerprinting</strong> to <strong>Allow fingerprinting</strong></li>
+        <li><strong>Reload</strong> the page, then tap Connect again</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="a2hs-banner" id="a2hs-banner">
+    <div class="a2hs-text"><strong>Add to Home Screen</strong>Install for quick access & full-screen workout view</div>
+    <button class="btn btn-secondary btn-sm" id="a2hs-install-btn" onclick="installA2HS()">Install</button>
+    <button class="a2hs-dismiss" onclick="dismissA2HS()" aria-label="Dismiss">×</button>
+  </div>
+
+  <button class="btn btn-primary" onclick="startWorkout()">Start Workout</button>
+  <div class="text-muted mt-8" style="text-align:center;font-size:0.72rem">
+    4 × 4 min work · 3 min recovery · 85–95% max HR
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2: WORKOUT
+════════════════════════════════════════════ -->
+<div id="screen-workout" class="screen">
+
+  <div class="workout-header">
+    <div class="phase-label" id="wk-phase-label">Warm-up</div>
+    <div class="interval-dots" id="interval-dots"></div>
+  </div>
+
+  <div class="workout-body">
+    <div class="timer-block">
+      <div class="phase-name" id="phase-name">WARM-UP</div>
+      <div class="timer-display" id="timer-display">5:00</div>
+    </div>
+
+    <div class="hr-block" id="hr-block">
+      <div class="hr-value" id="wk-hr">—</div>
+      <div class="hr-bpm">BPM</div>
+      <div class="zone-bar">
+        <div class="zb" id="zb0"></div>
+        <div class="zb" id="zb1"></div>
+        <div class="zb" id="zb2"></div>
+        <div class="zb" id="zb3"></div>
+        <div class="zb" id="zb4"></div>
+      </div>
+      <div class="zone-text" id="zone-text">—</div>
+    </div>
+  </div>
+
+  <div class="workout-controls">
+    <button class="btn btn-pause" id="pause-btn" onclick="togglePause()">Pause</button>
+    <button class="btn btn-stop" onclick="stopWorkout()">✕</button>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3: SUMMARY
+════════════════════════════════════════════ -->
+<div id="screen-summary" class="screen">
+  <div>
+    <div class="summary-title">Workout Complete</div>
+    <div class="text-muted">Norwegian 4×4 Protocol</div>
+  </div>
+  <div class="summary-grid" id="summary-grid"></div>
+  <div class="card">
+    <div class="section-label">Interval Breakdown</div>
+    <div id="interval-breakdown"></div>
+  </div>
+  <button class="btn btn-primary" onclick="goSetup()">New Workout</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let maxHR = 0, selectedFormula = null;
+let bleDevice = null, bleChar = null, currentHR = 0, bleConnected = false;
+let warmupMins = 5;
+let wakeLock = null;
+let deferredA2HS = null;
+
+const WORK_SECS = 4 * 60, RECOVERY_SECS = 3 * 60, NUM_INTERVALS = 4;
+
+let workoutPhases = [], currentPhaseIdx = 0, timeLeft = 0;
+let isPaused = false, timerInterval = null, workoutStartTime = null;
+let intervalStats = [], currentIntervalHRs = [];
+
+// ════════════════════════════════════════════
+// WAKE LOCK
+// ════════════════════════════════════════════
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+  } catch(e) {}
+}
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+document.addEventListener('visibilitychange', async () => {
+  if (wakeLock === null && document.visibilityState === 'visible') {
+    if (document.getElementById('screen-workout').classList.contains('active') && !isPaused) {
+      await requestWakeLock();
+    }
+  }
+});
+
+// ════════════════════════════════════════════
+// BRAVE DETECTION
+// ════════════════════════════════════════════
+let _isBrave = false;
+(async () => {
+  try { _isBrave = !!(navigator.brave && await navigator.brave.isBrave()); } catch(e) {}
+  if (_isBrave) {
+    document.getElementById('ble-note').textContent = 'Brave detected — see setup steps below if connection fails.';
+    if (!navigator.bluetooth) document.getElementById('brave-help').classList.add('visible');
+  }
+})();
+
+// ════════════════════════════════════════════
+// ADD TO HOME SCREEN
+// ════════════════════════════════════════════
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredA2HS = e;
+  document.getElementById('a2hs-banner').classList.add('visible');
+});
+window.addEventListener('appinstalled', () => {
+  deferredA2HS = null;
+  document.getElementById('a2hs-banner').classList.remove('visible');
+});
+async function installA2HS() {
+  if (!deferredA2HS) return;
+  deferredA2HS.prompt();
+  const { outcome } = await deferredA2HS.userChoice;
+  if (outcome === 'accepted') deferredA2HS = null;
+}
+function dismissA2HS() {
+  deferredA2HS = null;
+  document.getElementById('a2hs-banner').classList.remove('visible');
+}
+
+// ════════════════════════════════════════════
+// HAPTICS
+// ════════════════════════════════════════════
+function vibrate(pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+}
+
+// ── Audio ──────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function getAudio() { if (!audioCtx) audioCtx = new AudioCtx(); return audioCtx; }
+function beep(freq=880, dur=0.12, vol=0.3) {
+  try {
+    const ac = getAudio(), osc = ac.createOscillator(), gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.frequency.value = freq; osc.type = 'sine';
+    gain.gain.setValueAtTime(vol, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    osc.start(); osc.stop(ac.currentTime + dur);
+  } catch(e) {}
+}
+function beepWarmup()   { beep(660, 0.2); vibrate([200]); }
+function beepWork()     { beep(880,0.12); setTimeout(()=>beep(880,0.12),160); setTimeout(()=>beep(1100,0.25),320); vibrate([100,80,100,80,200]); }
+function beepRecovery() { beep(550,0.2); setTimeout(()=>beep(440,0.3),250); vibrate([200,100,300]); }
+function beepDone()     { [0,200,400,650].forEach((t,i)=>setTimeout(()=>beep(660+i*110,0.18),t)); vibrate([100,50,100,50,100,50,400]); }
+function beepCountdown(){ beep(660,0.1,0.25); vibrate([40]); }
+
+// ════════════════════════════════════════════
+// SCREEN NAV
+// ════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ════════════════════════════════════════════
+// MAX HR
+// ════════════════════════════════════════════
+document.getElementById('age-input').addEventListener('input', function() {
+  const age = parseInt(this.value);
+  if (!age || age < 10 || age > 100) {
+    ['fox','tanaka','gulati'].forEach(f=>document.getElementById('val-'+f).textContent='—');
+    return;
+  }
+  const fox=Math.round(220-age), tanaka=Math.round(208-0.7*age), gulati=Math.round(206-0.88*age);
+  document.getElementById('val-fox').textContent=fox;
+  document.getElementById('val-tanaka').textContent=tanaka;
+  document.getElementById('val-gulati').textContent=gulati;
+  if (selectedFormula) setMaxHR({fox,tanaka,gulati}[selectedFormula]);
+});
+
+document.getElementById('manual-hr').addEventListener('input', function() {
+  const v = parseInt(this.value);
+  if (v >= 100 && v <= 230) {
+    selectedFormula = null;
+    document.querySelectorAll('.formula-card').forEach(c=>c.classList.remove('selected'));
+    setMaxHR(v);
+  }
+});
+
+function selectFormula(formula) {
+  selectedFormula = formula;
+  document.querySelectorAll('.formula-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelector(`.formula-card[data-formula="${formula}"]`).classList.add('selected');
+  const age = parseInt(document.getElementById('age-input').value);
+  if (!age) return;
+  document.getElementById('manual-hr').value = '';
+  setMaxHR({fox:Math.round(220-age),tanaka:Math.round(208-0.7*age),gulati:Math.round(206-0.88*age)}[formula]);
+}
+
+function setMaxHR(hr) {
+  maxHR = hr;
+  const lo=Math.round(hr*0.85), hi=Math.round(hr*0.95);
+  document.getElementById('zone-preview').style.display='flex';
+  document.getElementById('zp-low').textContent=`< ${lo}`;
+  document.getElementById('zp-target').textContent=`${lo}–${hi}`;
+  document.getElementById('zp-over').textContent=`> ${hi}`;
+}
+
+// ════════════════════════════════════════════
+// WARMUP STEPPER
+// ════════════════════════════════════════════
+function adjustWarmup(delta) {
+  warmupMins = Math.max(0, Math.min(15, warmupMins + delta));
+  document.getElementById('warmup-val').textContent = warmupMins === 0 ? 'Off' : `${warmupMins} min`;
+  document.getElementById('warmup-note').textContent = warmupMins === 0
+    ? 'Workout starts directly with Interval 1.'
+    : 'Easy aerobic effort before first interval. Set to 0 to skip.';
+}
+
+// ════════════════════════════════════════════
+// BLE
+// ════════════════════════════════════════════
+async function toggleBLE() { bleConnected ? disconnectBLE() : await connectBLE(); }
+
+async function connectBLE() {
+  if (!navigator.bluetooth) {
+    document.getElementById('ble-status-text').textContent = 'Web Bluetooth not available';
+    document.getElementById('ble-note').textContent = 'Please use Chrome on Android.';
+    return;
+  }
+  try {
+    setBLEStatus('scanning');
+    bleDevice = await navigator.bluetooth.requestDevice({
+      filters: [{ name:'CooSpo H808S' },{ namePrefix:'CooSpo' },{ namePrefix:'H808' },{ services:['heart_rate'] }],
+      optionalServices: ['heart_rate']
+    });
+    bleDevice.addEventListener('gattserverdisconnected', onBLEDisconnect);
+    const server = await bleDevice.gatt.connect();
+    const service = await server.getPrimaryService('heart_rate');
+    bleChar = await service.getCharacteristic('heart_rate_measurement');
+    await bleChar.startNotifications();
+    bleChar.addEventListener('characteristicvaluechanged', onHRData);
+    setBLEStatus('connected', bleDevice.name || 'HR Monitor');
+  } catch(e) {
+    if (e.name === 'NotFoundError') { setBLEStatus('disconnected'); return; }
+    document.getElementById('ble-status-text').textContent = 'Connection failed';
+    setBLEStatus('disconnected');
+    if (_isBrave) document.getElementById('brave-help').classList.add('visible');
+  }
+}
+
+function disconnectBLE() {
+  if (bleChar) { try { bleChar.stopNotifications(); } catch(e){} }
+  if (bleDevice?.gatt?.connected) bleDevice.gatt.disconnect();
+  onBLEDisconnect();
+}
+
+function onBLEDisconnect() {
+  bleConnected=false; bleChar=null; setBLEStatus('disconnected');
+  document.getElementById('ble-hr-preview').textContent='—'; currentHR=0;
+}
+
+function setBLEStatus(state, name='') {
+  const dot=document.getElementById('ble-dot'), txt=document.getElementById('ble-status-text'), btn=document.getElementById('ble-btn');
+  dot.className='ble-dot';
+  if (state==='connected') {
+    dot.classList.add('connected'); txt.textContent=name; btn.textContent='Disconnect'; bleConnected=true;
+    document.getElementById('ble-note').textContent='Connected — ready to train.';
+  } else if (state==='scanning') {
+    dot.classList.add('scanning'); txt.textContent='Scanning…'; btn.textContent='Cancel';
+  } else {
+    txt.textContent='Not connected'; btn.textContent='Connect'; bleConnected=false;
+  }
+}
+
+function onHRData(event) {
+  const val=event.target.value, flags=val.getUint8(0);
+  currentHR = (flags & 0x01) ? val.getUint16(1,true) : val.getUint8(1);
+  document.getElementById('ble-hr-preview').textContent=currentHR;
+  if (document.getElementById('screen-workout').classList.contains('active')) {
+    updateWorkoutHR(currentHR);
+    const phase=workoutPhases[currentPhaseIdx];
+    if (phase?.type==='work') currentIntervalHRs.push(currentHR);
+  }
+}
+
+// ════════════════════════════════════════════
+// WORKOUT
+// ════════════════════════════════════════════
+function buildPhases() {
+  const phases = [];
+  if (warmupMins > 0) phases.push({ type:'warmup', duration:warmupMins*60 });
+  for (let i=0; i<NUM_INTERVALS; i++) {
+    phases.push({ type:'work', interval:i+1, duration:WORK_SECS });
+    if (i < NUM_INTERVALS-1) phases.push({ type:'recovery', afterInterval:i+1, duration:RECOVERY_SECS });
+  }
+  return phases;
+}
+
+function buildDots() {
+  const c = document.getElementById('interval-dots');
+  c.innerHTML='';
+  for (let i=0; i<NUM_INTERVALS; i++) {
+    const d=document.createElement('div'); d.className='dot'; d.id=`dot-${i}`; c.appendChild(d);
+  }
+}
+
+function startWorkout() {
+  if (!maxHR) { alert('Please enter your age or max heart rate first.'); return; }
+  try { getAudio().resume(); } catch(e) {}
+  workoutPhases=buildPhases(); currentPhaseIdx=0;
+  intervalStats=[]; currentIntervalHRs=[]; workoutStartTime=Date.now();
+  buildDots();
+  showScreen('screen-workout');
+  requestWakeLock();
+  beginPhase(0);
+}
+
+function beginPhase(idx) {
+  const phase=workoutPhases[idx];
+  timeLeft=phase.duration; isPaused=false;
+  document.getElementById('pause-btn').textContent='Pause';
+  if (phase.type==='warmup')   beepWarmup();
+  if (phase.type==='work')     beepWork();
+  if (phase.type==='recovery') beepRecovery();
+  updateWorkoutUI(phase);
+  clearInterval(timerInterval);
+  timerInterval=setInterval(tick, 1000);
+}
+
+function tick() {
+  if (isPaused) return;
+  timeLeft--;
+  const phase=workoutPhases[currentPhaseIdx];
+  updateWorkoutUI(phase);
+  if (timeLeft<=3 && timeLeft>0) beepCountdown();
+  if (timeLeft<=0) {
+    if (phase.type==='work') saveIntervalStat(phase.interval);
+    currentPhaseIdx++;
+    if (currentPhaseIdx>=workoutPhases.length) finishWorkout();
+    else { currentIntervalHRs=[]; beginPhase(currentPhaseIdx); }
+  }
+}
+
+function updateWorkoutUI(phase) {
+  const mins=String(Math.floor(timeLeft/60)), secs=String(timeLeft%60).padStart(2,'0');
+  document.getElementById('timer-display').textContent=`${mins}:${secs}`;
+
+  const phaseName=document.getElementById('phase-name');
+  const timerEl=document.getElementById('timer-display');
+  const phaseLabel=document.getElementById('wk-phase-label');
+
+  if (phase.type==='warmup') {
+    phaseName.textContent='WARM-UP'; phaseName.style.color='var(--warmup)';
+    timerEl.style.color='var(--warmup)'; phaseLabel.textContent='Warm-up';
+    document.querySelectorAll('.dot').forEach(d=>d.className='dot');
+  } else if (phase.type==='work') {
+    phaseName.textContent='WORK'; phaseName.style.color='var(--work)';
+    timerEl.style.color='var(--work)'; phaseLabel.textContent=`Interval ${phase.interval} of ${NUM_INTERVALS}`;
+    updateDots(phase.interval-1);
+  } else {
+    phaseName.textContent='RECOVER'; phaseName.style.color='var(--recovery)';
+    timerEl.style.color='var(--recovery)'; phaseLabel.textContent=`Recovery — Interval ${phase.afterInterval+1} next`;
+    updateDots(phase.afterInterval);
+  }
+  updateWorkoutHR(currentHR);
+}
+
+function updateDots(activeIdx) {
+  for (let i=0; i<NUM_INTERVALS; i++) {
+    const d=document.getElementById(`dot-${i}`); if (!d) continue;
+    d.className='dot';
+    if (i<activeIdx) d.classList.add('done');
+    if (i===activeIdx) d.classList.add('active');
+  }
+}
+
+function updateWorkoutHR(hr) {
+  const el=document.getElementById('wk-hr'), block=document.getElementById('hr-block');
+  const zoneText=document.getElementById('zone-text');
+  const zbs=[0,1,2,3,4].map(i=>document.getElementById('zb'+i));
+  el.textContent = hr>0 ? hr : '—';
+  zbs.forEach(z=>z.className='zb');
+
+  if (!maxHR || hr===0) {
+    block.className='hr-block'; el.style.color='var(--muted)'; zoneText.style.color='var(--muted)';
+    zoneText.textContent = bleConnected ? 'Waiting for data…' : 'No monitor connected'; return;
+  }
+
+  const pct=hr/maxHR, lo=0.85, hi=0.95;
+  const filled=Math.max(0,Math.min(5,Math.round(((pct-0.6)/0.5)*5)));
+  const cls = pct<lo ? 'active-low' : pct>hi ? 'active-over' : 'active';
+  for (let i=0;i<filled;i++) zbs[i].classList.add(cls);
+
+  if (pct<lo) {
+    block.className='hr-block zone-low'; el.style.color='var(--zone-low)';
+    zoneText.style.color='var(--zone-low)'; zoneText.textContent='Below target — push harder';
+  } else if (pct>hi) {
+    block.className='hr-block zone-over'; el.style.color='var(--zone-over)';
+    zoneText.style.color='var(--zone-over)'; zoneText.textContent='Above target — ease back';
+  } else {
+    block.className='hr-block zone-target'; el.style.color='var(--zone-target)';
+    zoneText.style.color='var(--zone-target)'; zoneText.textContent='In target zone ✓';
+  }
+}
+
+function saveIntervalStat(intervalNum) {
+  const hrs=currentIntervalHRs.filter(h=>h>0);
+  if (!hrs.length) { intervalStats.push({interval:intervalNum,avg:null,max:null,timeInZone:null}); return; }
+  const avg=Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length), max=Math.max(...hrs);
+  const lo=maxHR*0.85, hi=maxHR*0.95;
+  intervalStats.push({interval:intervalNum,avg,max,timeInZone:hrs.filter(h=>h>=lo&&h<=hi).length});
+}
+
+function togglePause() {
+  isPaused=!isPaused;
+  document.getElementById('pause-btn').textContent=isPaused?'Resume':'Pause';
+}
+
+function stopWorkout() {
+  if (!confirm('Stop workout?')) return;
+  clearInterval(timerInterval); releaseWakeLock(); showSummary();
+}
+
+function finishWorkout() { clearInterval(timerInterval); releaseWakeLock(); beepDone(); showSummary(); }
+
+// ════════════════════════════════════════════
+// SUMMARY
+// ════════════════════════════════════════════
+function showSummary() {
+  showScreen('screen-summary');
+  const totalSecs=Math.round((Date.now()-workoutStartTime)/1000);
+  const totalMins=Math.floor(totalSecs/60), totalSec2=totalSecs%60;
+  const allAvgs=intervalStats.map(s=>s.avg).filter(Boolean);
+  const overallAvg=allAvgs.length?Math.round(allAvgs.reduce((a,b)=>a+b,0)/allAvgs.length):'—';
+  const totalInZone=intervalStats.reduce((a,s)=>a+(s.timeInZone||0),0);
+  const zoneMin=Math.floor(totalInZone/60), zoneSec=totalInZone%60;
+
+  document.getElementById('summary-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Duration</div><div class="stat-val">${totalMins}:${String(totalSec2).padStart(2,'0')}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg HR</div><div class="stat-val">${overallAvg}</div></div>
+    <div class="stat-card" style="grid-column:1/-1"><div class="stat-label">Time in Target Zone (85–95%)</div>
+      <div class="stat-val">${zoneMin}:${String(zoneSec).padStart(2,'0')} <span style="font-size:1rem;color:var(--muted)">min</span></div></div>
+  `;
+
+  document.getElementById('interval-breakdown').innerHTML=intervalStats.map(s=>`
+    <div class="interval-row">
+      <span class="lbl">Interval ${s.interval}</span>
+      <span class="val">${s.avg?`Avg ${s.avg} · Max ${s.max} · Zone ${Math.floor((s.timeInZone||0)/60)}:${String((s.timeInZone||0)%60).padStart(2,'0')}`:'No HR data'}</span>
+    </div>
+  `).join('');
+}
+
+function goSetup() { showScreen('screen-setup'); }
+</script>
+</body>
+</html>

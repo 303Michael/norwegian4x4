@@ -124,6 +124,8 @@
 
   .workout-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
   .phase-label    { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .finish-time    { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; }
+  .finish-time span { color: var(--text); font-family: 'DM Mono', monospace; }
   .interval-dots  { display: flex; gap: 6px; }
   .dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); transition: background 0.3s, border-color 0.3s; }
   .dot.done   { background: var(--muted); border-color: var(--muted); }
@@ -383,6 +385,7 @@
 
   <div class="workout-header">
     <div class="phase-label" id="wk-phase-label">Warm-up</div>
+    <div class="finish-time">Done at <span id="finish-time">—</span></div>
     <div class="interval-dots" id="interval-dots"></div>
   </div>
 
@@ -724,6 +727,12 @@ function updateWorkoutUI(phase) {
   const phaseName=document.getElementById('phase-name');
   const timerEl=document.getElementById('timer-display');
   const phaseLabel=document.getElementById('wk-phase-label');
+
+  const remainingSecs = timeLeft + workoutPhases.slice(currentPhaseIdx+1).reduce((a,p)=>a+p.duration,0);
+  const finishDate = new Date(Date.now() + remainingSecs*1000);
+  const h=finishDate.getHours(), m=finishDate.getMinutes();
+  document.getElementById('finish-time').textContent =
+    `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;
 
   const skipBtn=document.getElementById('skip-btn');
   skipBtn.style.display = (phase.type==='warmup' && timeLeft>10) ? 'block' : 'none';

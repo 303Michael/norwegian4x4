@@ -49,9 +49,8 @@
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
 
-  .input-row { display: flex; justify-content: flex-end; }
-  .labeled-input { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .labeled-input .input-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .input-row { display: flex; align-items: center; gap: 12px; }
+  .input-row label { font-size: 0.9rem; color: var(--muted); flex: 1; }
 
   input[type="number"] {
     background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
@@ -73,7 +72,7 @@
   .formula-desc { font-size: 0.74rem; color: var(--muted); line-height: 1.55; margin: 10px 0 4px; display: none; }
   .formula-desc.visible { display: block; }
 
-  .manual-row { display: flex; justify-content: flex-end; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .manual-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
   .manual-row label { font-size: 0.82rem; color: var(--muted); flex: 1; }
 
   .hr-zone-preview { display: flex; gap: 6px; margin-top: 12px; }
@@ -287,10 +286,8 @@
   <div class="section-label">Max Heart Rate</div>
   <div class="card">
     <div class="input-row">
-      <div class="labeled-input">
-        <span class="input-label">Your age</span>
-        <input type="number" id="age-input" min="10" max="100" placeholder="35">
-      </div>
+      <label>Your age</label>
+      <input type="number" id="age-input" min="10" max="100" placeholder="35">
     </div>
     <div class="formula-grid">
       <div class="formula-card" data-formula="fox" onclick="selectFormula('fox')">
@@ -311,10 +308,8 @@
     <div class="formula-desc" id="desc-gulati">Derived from a 2010 study of women specifically. If you're female, this formula is likely your most accurate choice.</div>
 
     <div class="manual-row">
-      <div class="labeled-input">
-        <span class="input-label">Or enter manually</span>
-        <input type="number" id="manual-hr" min="100" max="230" placeholder="190">
-      </div>
+      <label>Or enter manually</label>
+      <input type="number" id="manual-hr" min="100" max="230" placeholder="190">
     </div>
     <div class="hr-zone-preview" id="zone-preview" style="display:none">
       <div class="zone-chip" style="background:rgba(58,123,213,0.15);color:var(--zone-low)">
@@ -412,6 +407,7 @@
   </div>
 
   <div class="workout-controls">
+    <button class="btn btn-secondary btn-sm" id="skip-btn" onclick="skipToCountdown()" style="display:none;flex:none;padding:14px 16px;font-size:0.8rem;">Skip to 0:10</button>
     <button class="btn btn-pause" id="pause-btn" onclick="togglePause()">Pause</button>
     <button class="btn btn-stop" onclick="stopWorkout()">✕</button>
   </div>
@@ -729,6 +725,9 @@ function updateWorkoutUI(phase) {
   const timerEl=document.getElementById('timer-display');
   const phaseLabel=document.getElementById('wk-phase-label');
 
+  const skipBtn=document.getElementById('skip-btn');
+  skipBtn.style.display = (phase.type==='warmup' && timeLeft>10) ? 'block' : 'none';
+
   if (phase.type==='warmup') {
     phaseName.textContent='WARM-UP'; phaseName.style.color='var(--warmup)';
     timerEl.style.color='var(--warmup)'; phaseLabel.textContent='Warm-up';
@@ -789,6 +788,10 @@ function saveIntervalStat(intervalNum) {
   const avg=Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length), max=Math.max(...hrs);
   const lo=maxHR*0.85, hi=maxHR*0.95;
   intervalStats.push({interval:intervalNum,avg,max,timeInZone:hrs.filter(h=>h>=lo&&h<=hi).length});
+}
+
+function skipToCountdown() {
+  if (workoutPhases[currentPhaseIdx]?.type === 'warmup') timeLeft = 10;
 }
 
 function togglePause() {

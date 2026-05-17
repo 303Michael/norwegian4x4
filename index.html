@@ -262,6 +262,30 @@
   .text-muted{ color: var(--muted); font-size: 0.82rem; }
   .no-ble-note { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 8px; line-height: 1.5; }
 
+  /* Three-dot button */
+  .setup-header  { display: flex; justify-content: space-between; align-items: flex-start; }
+  .btn-dots { background: none; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; padding: 0 2px; line-height: 1; letter-spacing: -1px; margin-top: 2px; }
+  .btn-dots:hover { color: var(--text); }
+
+  /* Settings screen */
+  #screen-settings { justify-content: flex-start; gap: 14px; overflow-y: auto; }
+  .settings-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.1em; color: var(--text); }
+
+  /* Date input */
+  input[type="date"] {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 1rem;
+    padding: 8px 12px; outline: none; color-scheme: dark;
+  }
+  input[type="date"]:focus { border-color: var(--accent); }
+
+  /* Tips */
+  .tip-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .tip-card + .tip-card { margin-top: 8px; }
+  .tip-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .tip-body  { font-size: 0.82rem; color: var(--text); line-height: 1.6; }
+  .tip-source { font-size: 0.68rem; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+
   /* A2HS banner */
   .a2hs-banner {
     display: none; align-items: center; gap: 10px;
@@ -281,8 +305,13 @@
 ════════════════════════════════════════════ -->
 <div id="screen-setup" class="screen active">
 
-  <div class="app-title">Norwegian 4×4</div>
-  <div class="app-sub">HIIT Training Protocol</div>
+  <div class="setup-header">
+    <div>
+      <div class="app-title">Norwegian 4×4</div>
+      <div class="app-sub">HIIT Training Protocol</div>
+    </div>
+    <button class="btn-dots" onclick="showScreen('screen-settings')" aria-label="Settings">···</button>
+  </div>
 
   <!-- Max HR -->
   <div class="section-label">Max Heart Rate</div>
@@ -410,9 +439,9 @@
   </div>
 
   <div class="workout-controls">
+    <button class="btn btn-stop" onclick="stopWorkout()">✕</button>
     <button class="btn btn-secondary btn-sm" id="skip-btn" onclick="skipToCountdown()" style="display:none;flex:none;padding:14px 16px;font-size:0.8rem;">Skip to 0:10</button>
     <button class="btn btn-pause" id="pause-btn" onclick="togglePause()">Pause</button>
-    <button class="btn btn-stop" onclick="stopWorkout()">✕</button>
   </div>
 
 </div>
@@ -431,6 +460,71 @@
     <div id="interval-breakdown"></div>
   </div>
   <button class="btn btn-primary" onclick="goSetup()">New Workout</button>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 4: SETTINGS & TIPS
+════════════════════════════════════════════ -->
+<div id="screen-settings" class="screen">
+
+  <div class="setup-header">
+    <div class="settings-title">Settings & Tips</div>
+    <button class="btn-dots" onclick="showScreen('screen-setup')" aria-label="Back">✕</button>
+  </div>
+
+  <!-- Personal -->
+  <div class="section-label">Personal</div>
+  <div class="card">
+    <div class="input-row">
+      <label>Date of birth</label>
+      <input type="date" id="birthday-input" onchange="saveBirthday()">
+    </div>
+    <div class="warmup-note" id="birthday-note" style="margin-top:8px">Your age will be filled in automatically on the setup screen.</div>
+  </div>
+
+  <!-- Tips -->
+  <div class="section-label">About the Norwegian 4×4 Protocol</div>
+
+  <div class="tip-card">
+    <div class="tip-title">What is it?</div>
+    <div class="tip-body">Four intervals of 4 minutes at 85–95% of your max heart rate, with 3 minutes of active recovery between each. Total workout time is around 40 minutes including warm-up.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-title">Where it comes from</div>
+    <div class="tip-body">Developed by Professor Jan Helgerud and colleagues at the Norwegian University of Science and Technology (NTNU). A landmark 2007 study showed 4×4 interval training improved VO₂max significantly more than moderate continuous exercise over the same period.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-title">How often</div>
+    <div class="tip-body">Two to three sessions per week is the evidence-based recommendation. More than three sessions offers diminishing returns and increases injury risk. Most people see meaningful VO₂max gains within 8 weeks.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-title">During recovery</div>
+    <div class="tip-body">Keep moving — walk, jog slowly, or pedal easy. Active recovery clears lactate faster than standing still and prepares you better for the next interval. Your HR should drop below 70% by the end of the 3 minutes.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-title">Pacing tip</div>
+    <div class="tip-body">If you can't reach 85% HR in the final interval, you started too easy. If you can't hold 85% by the end of each interval, you started too hard. The last interval should feel like the hardest thing you've done all week.</div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-title">Works on any cardio machine</div>
+    <div class="tip-body">Treadmill, bike, rower, ski erg — the protocol is equipment-agnostic. Running outdoors on a hill works well. The key is sustained intensity, not the modality.</div>
+  </div>
+
+  <div class="tip-source">
+    <a href="https://pubmed.ncbi.nlm.nih.gov/17414804/" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">Helgerud J, et al. "Aerobic high-intensity intervals improve VO₂max more than moderate training." Med Sci Sports Exerc, 2007.</a>
+    Official guidance from the <a href="https://www.ntnu.edu/cerg/advice" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">NTNU Cardiac Exercise Research Group (CERG)</a>.
+    <br><br>
+    This app is not affiliated with, endorsed by, or officially associated with Jan Helgerud, NTNU, or the CERG research group. It is an independent tool built for personal use.
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-secondary" onclick="showScreen('screen-setup')">Done</button>
+
 </div>
 
 <script>
@@ -843,6 +937,40 @@ function showSummary() {
 }
 
 function goSetup() { showScreen('screen-setup'); }
+
+// ════════════════════════════════════════════
+// BIRTHDAY / AUTO-AGE
+// ════════════════════════════════════════════
+function calcAge(dob) {
+  const today = new Date(), birth = new Date(dob);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function applyBirthday(dob) {
+  const age = calcAge(dob);
+  const ageInput = document.getElementById('age-input');
+  ageInput.value = age;
+  ageInput.dispatchEvent(new Event('input'));
+  document.getElementById('birthday-note').textContent = `Age ${age} applied to setup screen.`;
+}
+
+function saveBirthday() {
+  const dob = document.getElementById('birthday-input').value;
+  if (!dob) return;
+  localStorage.setItem('n44_birthday', dob);
+  applyBirthday(dob);
+}
+
+// Load saved birthday on startup
+(function loadBirthday() {
+  const dob = localStorage.getItem('n44_birthday');
+  if (!dob) return;
+  document.getElementById('birthday-input').value = dob;
+  applyBirthday(dob);
+})()
 </script>
 </body>
 </html>

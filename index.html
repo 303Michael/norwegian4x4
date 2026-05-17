@@ -33,8 +33,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
   }
+
+  #screen-workout { overflow: hidden; }
 
   /* ── SCREENS ── */
   .screen { display: none; width: 100%; max-width: 480px; padding: 24px 20px; flex-direction: column; min-height: 100dvh; }
@@ -48,8 +49,9 @@
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
 
-  .input-row { display: flex; align-items: center; gap: 12px; }
-  .input-row label { font-size: 0.9rem; color: var(--muted); flex: 1; }
+  .input-row { display: flex; justify-content: flex-end; }
+  .labeled-input { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .labeled-input .input-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 
   input[type="number"] {
     background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
@@ -68,7 +70,10 @@
   .formula-val  { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--text); letter-spacing: 0.05em; }
   .formula-card.selected .formula-val { color: var(--accent); }
 
-  .manual-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .formula-desc { font-size: 0.74rem; color: var(--muted); line-height: 1.55; margin: 10px 0 4px; display: none; }
+  .formula-desc.visible { display: block; }
+
+  .manual-row { display: flex; justify-content: flex-end; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
   .manual-row label { font-size: 0.82rem; color: var(--muted); flex: 1; }
 
   .hr-zone-preview { display: flex; gap: 6px; margin-top: 12px; }
@@ -282,8 +287,10 @@
   <div class="section-label">Max Heart Rate</div>
   <div class="card">
     <div class="input-row">
-      <label>Your age</label>
-      <input type="number" id="age-input" min="10" max="100" placeholder="35">
+      <div class="labeled-input">
+        <span class="input-label">Your age</span>
+        <input type="number" id="age-input" min="10" max="100" placeholder="35">
+      </div>
     </div>
     <div class="formula-grid">
       <div class="formula-card" data-formula="fox" onclick="selectFormula('fox')">
@@ -299,9 +306,15 @@
         <div class="formula-val" id="val-gulati">—</div>
       </div>
     </div>
+    <div class="formula-desc" id="desc-fox">The classic formula from 1971. Simple and widely used, but tends to overestimate max HR for younger people and underestimate for older adults (50+).</div>
+    <div class="formula-desc" id="desc-tanaka">Based on a 2001 meta-analysis of over 18,000 subjects. More accurate across all age groups — the most commonly cited formula in modern sports science.</div>
+    <div class="formula-desc" id="desc-gulati">Derived from a 2010 study of women specifically. If you're female, this formula is likely your most accurate choice.</div>
+
     <div class="manual-row">
-      <label>Or enter manually</label>
-      <input type="number" id="manual-hr" min="100" max="230" placeholder="190">
+      <div class="labeled-input">
+        <span class="input-label">Or enter manually</span>
+        <input type="number" id="manual-hr" min="100" max="230" placeholder="190">
+      </div>
     </div>
     <div class="hr-zone-preview" id="zone-preview" style="display:none">
       <div class="zone-chip" style="background:rgba(58,123,213,0.15);color:var(--zone-low)">
@@ -555,6 +568,8 @@ function selectFormula(formula) {
   selectedFormula = formula;
   document.querySelectorAll('.formula-card').forEach(c=>c.classList.remove('selected'));
   document.querySelector(`.formula-card[data-formula="${formula}"]`).classList.add('selected');
+  document.querySelectorAll('.formula-desc').forEach(d=>d.classList.remove('visible'));
+  document.getElementById('desc-'+formula).classList.add('visible');
   const age = parseInt(document.getElementById('age-input').value);
   if (!age) return;
   document.getElementById('manual-hr').value = '';

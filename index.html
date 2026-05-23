@@ -319,11 +319,22 @@
   /* HR Monitor screen */
   #screen-hrmonitor { justify-content: flex-start; }
   .hrm-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  .hrm-number-block { text-align: center; display: flex; align-items: center; justify-content: center; }
+  .hrm-info-block { display: flex; flex-direction: column; align-items: center; gap: 8px; }
   .hrm-value { font-family: 'Bebas Neue', sans-serif; font-size: clamp(8rem, 46vw, 22rem); line-height: 1; letter-spacing: 0.04em; transition: color 0.4s; color: var(--accent); }
-  .hrm-stats { display: flex; gap: 36px; }
+  .hrm-stats { display: flex; gap: 36px; margin-top: 4px; }
   .hrm-stat { text-align: center; }
   .hrm-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.05em; }
   .hrm-stat-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+
+  @media (orientation: landscape) {
+    #screen-hrmonitor { padding: 10px 20px 12px; }
+    .hrm-body { flex-direction: row; align-items: stretch; gap: 0; }
+    .hrm-number-block { flex: 1; border-right: 1px solid var(--border); padding-right: 20px; }
+    .hrm-value { font-size: clamp(4rem, 52vh, 14rem); }
+    .hrm-info-block { flex: 1; align-items: flex-start; justify-content: center; padding-left: 24px; gap: 12px; }
+    .hrm-stats { gap: 24px; }
+  }
 </style>
 </head>
 <body>
@@ -537,23 +548,25 @@
   </div>
 
   <div class="hrm-body">
-    <div style="text-align:center">
+    <div class="hrm-number-block">
       <div class="hrm-value" id="hrm-value">—</div>
-      <div class="hr-bpm" style="font-size:0.85rem;margin-top:4px">BPM</div>
-      <div class="zone-text" id="hrm-zone" style="margin-top:10px;font-size:0.8rem">—</div>
     </div>
-    <div class="hrm-stats">
-      <div class="hrm-stat">
-        <div class="hrm-stat-val" id="hrm-max">—</div>
-        <div class="hrm-stat-label">Max</div>
-      </div>
-      <div class="hrm-stat">
-        <div class="hrm-stat-val" id="hrm-avg">—</div>
-        <div class="hrm-stat-label">Avg</div>
-      </div>
-      <div class="hrm-stat">
-        <div class="hrm-stat-val" id="hrm-min">—</div>
-        <div class="hrm-stat-label">Min</div>
+    <div class="hrm-info-block">
+      <div class="hr-bpm" style="font-size:0.85rem">BPM</div>
+      <div class="zone-text" id="hrm-zone" style="font-size:0.8rem">—</div>
+      <div class="hrm-stats">
+        <div class="hrm-stat">
+          <div class="hrm-stat-val" id="hrm-max">—</div>
+          <div class="hrm-stat-label">Max</div>
+        </div>
+        <div class="hrm-stat">
+          <div class="hrm-stat-val" id="hrm-avg">—</div>
+          <div class="hrm-stat-label">Avg</div>
+        </div>
+        <div class="hrm-stat">
+          <div class="hrm-stat-val" id="hrm-min">—</div>
+          <div class="hrm-stat-label">Min</div>
+        </div>
       </div>
     </div>
   </div>

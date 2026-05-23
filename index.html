@@ -848,11 +848,21 @@ function hrmSetStatus(msg, color='var(--muted)') {
   if (el) { el.textContent = msg; el.style.color = color; }
 }
 
+function showBraveHelp() {
+  document.getElementById('brave-help').classList.add('visible');
+  document.getElementById('ble-note').textContent = 'See setup steps below.';
+  if (hrmIsActive()) showScreen('screen-setup');
+}
+
 async function connectBLE() {
   if (!navigator.bluetooth) {
-    document.getElementById('ble-status-text').textContent = 'Web Bluetooth not available';
-    document.getElementById('ble-note').textContent = 'Please use Chrome on Android.';
-    if (hrmIsActive()) hrmSetStatus('Web Bluetooth not available in this browser', 'var(--zone-over)');
+    if (_isBrave) {
+      showBraveHelp();
+    } else {
+      document.getElementById('ble-status-text').textContent = 'Web Bluetooth not available';
+      document.getElementById('ble-note').textContent = 'Please use Chrome on Android.';
+      if (hrmIsActive()) hrmSetStatus('Web Bluetooth not available in this browser', 'var(--zone-over)');
+    }
     return;
   }
   try {
@@ -873,10 +883,13 @@ async function connectBLE() {
     if (hrmIsActive()) hrmSetStatus('Connected — waiting for data…', 'var(--zone-target)');
   } catch(e) {
     if (e.name === 'NotFoundError') { setBLEStatus('disconnected'); return; }
-    document.getElementById('ble-status-text').textContent = 'Connection failed';
     setBLEStatus('disconnected');
-    if (hrmIsActive()) hrmSetStatus('Connection failed — tap to try again', 'var(--zone-over)');
-    else if (_isBrave) document.getElementById('brave-help').classList.add('visible');
+    if (_isBrave) {
+      showBraveHelp();
+    } else {
+      document.getElementById('ble-status-text').textContent = 'Connection failed';
+      if (hrmIsActive()) hrmSetStatus('Connection failed — tap to try again', 'var(--zone-over)');
+    }
   }
 }
 

@@ -8,17 +8,22 @@
 - 4 × 4 min work / 3 min recovery protocol
 - Large timer + HR display with zone coloring (blue / green / red)
 - Zone bar + zone feedback text
-- Progress dots for 4 intervals
+- Progress dots for N intervals
 - Audio beep patterns (warmup / work / recovery / countdown / done)
 - Haptic vibration mirroring audio patterns
-- Landscape layout (timer left, HR right)
+- Landscape layout (timer left, HR right) — matched card borders on both panels
 - BLE connection to CooSpo H808S chest strap
+- BLE auto-reconnect on drop + manual reconnect button mid-workout
 - Brave browser detection + step-by-step fix instructions
 - Wake Lock API (screen stays on during workout)
-- Add to Home Screen install banner
+- Add to Home Screen install banner + PWA manifest + service worker
 - Summary screen (duration, avg HR, time in zone, per-interval breakdown)
+- Tabata mode (configurable work/rest/rounds, shares HR monitor + warmup)
+- Standalone HR Monitor screen (live BPM, zone coloring, session max/avg/min)
 
 ## Considering
 - Cooldown phase after last interval (adjustable duration, like warm-up)
-- Custom interval count and duration (not just 4×4)
+- Custom interval builder — define any number of phases with arbitrary durations and labels
 - Workout history saved to localStorage with a log screen
+- HR line graph with coloured zone bands (displayed in HR monitor and post-workout summary)
+- Monitor battery level display (read from GATT Battery Service, shown in HR monitor screen)

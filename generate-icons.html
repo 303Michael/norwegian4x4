@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Icon Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  body { background: #1a1a2e; color: #e8e8f0; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; gap: 24px; }
+  h2 { color: #c8ff00; margin: 0; }
+  .group { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  canvas { border: 1px solid #2a2a3e; border-radius: 8px; }
+  button { background: #c8ff00; color: #0a0a0f; border: none; padding: 10px 24px; font-weight: 700; font-size: 0.9rem; border-radius: 8px; cursor: pointer; }
+  p { color: #5a5a7a; font-size: 0.85rem; max-width: 480px; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+<h2>Norwegian 4×4 — Icon Generator</h2>
+<p>Wait for the font to load (1–2 s), then click each Download button. Save the files into an <code>icons/</code> folder in your project root.</p>
+
+<div class="group">
+  <canvas id="c512" width="512" height="512"></canvas>
+  <button onclick="download('c512','icon-512.png')">Download icon-512.png</button>
+</div>
+<div class="group">
+  <canvas id="c192" width="192" height="192"></canvas>
+  <button onclick="download('c192','icon-192.png')">Download icon-192.png</button>
+</div>
+<div class="group">
+  <canvas id="cm512" width="512" height="512"></canvas>
+  <button onclick="download('cm512','icon-512-maskable.png')">Download icon-512-maskable.png (maskable)</button>
+</div>
+
+<script>
+function drawIcon(canvas, maskable) {
+  const s = canvas.width;
+  const ctx = canvas.getContext('2d');
+  const pad = maskable ? s * 0.15 : 0; // safe zone for maskable
+
+  // Background
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, s, s);
+
+  // Subtle radial glow
+  const grd = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s * 0.6);
+  grd.addColorStop(0, 'rgba(200,255,0,0.08)');
+  grd.addColorStop(1, 'rgba(200,255,0,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, s, s);
+
+  // "4×4" main text
+  const fontSize = (s - pad * 2) * 0.54;
+  ctx.fillStyle = '#c8ff00';
+  ctx.font = `${fontSize}px 'Bebas Neue', Impact, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('4×4', s / 2, s * 0.44);
+
+  // Small "NORWEGIAN" label
+  const subSize = (s - pad * 2) * 0.075;
+  ctx.fillStyle = 'rgba(200,255,0,0.55)';
+  ctx.font = `600 ${subSize}px 'DM Sans', Arial, sans-serif`;
+  ctx.letterSpacing = '0.15em';
+  ctx.fillText('NORWEGIAN', s / 2, s * 0.76);
+
+  // Thin accent line under label
+  const lw = (s - pad * 2) * 0.25;
+  ctx.strokeStyle = 'rgba(200,255,0,0.3)';
+  ctx.lineWidth = s * 0.004;
+  ctx.beginPath();
+  ctx.moveTo(s/2 - lw/2, s * 0.84);
+  ctx.lineTo(s/2 + lw/2, s * 0.84);
+  ctx.stroke();
+}
+
+function renderAll() {
+  drawIcon(document.getElementById('c512'), false);
+  drawIcon(document.getElementById('c192'), false);
+  drawIcon(document.getElementById('cm512'), true);
+}
+
+function download(id, filename) {
+  const a = document.createElement('a');
+  a.download = filename;
+  a.href = document.getElementById(id).toDataURL('image/png');
+  a.click();
+}
+
+// Render once font is likely loaded
+document.fonts.ready.then(renderAll);
+setTimeout(renderAll, 1500); // fallback
+</script>
+</body>
+</html>

@@ -840,30 +840,43 @@ function adjustWarmup(delta) {
 // ════════════════════════════════════════════
 async function toggleBLE() { bleConnected ? disconnectBLE() : await connectBLE(); }
 
+function hrmIsActive() {
+  return document.getElementById('screen-hrmonitor').classList.contains('active');
+}
+function hrmSetStatus(msg, color='var(--muted)') {
+  const el = document.getElementById('hrm-zone');
+  if (el) { el.textContent = msg; el.style.color = color; }
+}
+
 async function connectBLE() {
   if (!navigator.bluetooth) {
     document.getElementById('ble-status-text').textContent = 'Web Bluetooth not available';
     document.getElementById('ble-note').textContent = 'Please use Chrome on Android.';
+    if (hrmIsActive()) hrmSetStatus('Web Bluetooth not available in this browser', 'var(--zone-over)');
     return;
   }
   try {
     setBLEStatus('scanning');
+    if (hrmIsActive()) hrmSetStatus('Scanning…');
     bleDevice = await navigator.bluetooth.requestDevice({
       filters: [{ name:'CooSpo H808S' },{ namePrefix:'CooSpo' },{ namePrefix:'H808' },{ services:['heart_rate'] }],
       optionalServices: ['heart_rate']
     });
     bleDevice.addEventListener('gattserverdisconnected', onBLEDisconnect);
+    if (hrmIsActive()) hrmSetStatus('Connecting…');
     const server = await bleDevice.gatt.connect();
     const service = await server.getPrimaryService('heart_rate');
     bleChar = await service.getCharacteristic('heart_rate_measurement');
     await bleChar.startNotifications();
     bleChar.addEventListener('characteristicvaluechanged', onHRData);
     setBLEStatus('connected', bleDevice.name || 'HR Monitor');
+    if (hrmIsActive()) hrmSetStatus('Connected — waiting for data…', 'var(--zone-target)');
   } catch(e) {
     if (e.name === 'NotFoundError') { setBLEStatus('disconnected'); return; }
     document.getElementById('ble-status-text').textContent = 'Connection failed';
     setBLEStatus('disconnected');
-    if (_isBrave) document.getElementById('brave-help').classList.add('visible');
+    if (hrmIsActive()) hrmSetStatus('Connection failed — tap to try again', 'var(--zone-over)');
+    else if (_isBrave) document.getElementById('brave-help').classList.add('visible');
   }
 }
 
@@ -929,7 +942,7 @@ function setBLEStatus(state, name='') {
   } else {
     txt.textContent='Not connected'; btn.textContent='Connect'; bleConnected=false;
   }
-  syncHRMBleBtn();
+  syncHRMBleBtn(state);
 }
 
 function onHRData(event) {
@@ -1151,9 +1164,15 @@ function openHRMonitor() {
   showScreen('screen-hrmonitor');
 }
 
-function syncHRMBleBtn() {
+function syncHRMBleBtn(state) {
   const btn = document.getElementById('hrm-ble-btn');
-  if (btn) btn.textContent = bleConnected ? 'Disconnect' : 'Connect HR Monitor';
+  if (!btn) return;
+  if (state === 'scanning') {
+    btn.textContent = 'Scanning…'; btn.disabled = true;
+  } else {
+    btn.textContent = bleConnected ? 'Disconnect' : 'Connect HR Monitor';
+    btn.disabled = false;
+  }
 }
 
 function updateHRMonitorDisplay(hr) {

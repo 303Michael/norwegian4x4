@@ -137,7 +137,7 @@
   .dot.done   { background: var(--muted); border-color: var(--muted); }
   .dot.active { background: var(--accent); border-color: var(--accent); }
 
-  .btn-fullscreen { background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; padding: 0 2px; line-height: 1; transition: color 0.15s; }
+  .btn-fullscreen { background: none; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; padding: 0 2px; line-height: 1; transition: color 0.15s; }
   .btn-fullscreen:active { color: var(--text); }
 
   /* Portrait: timer stacked above HR */
@@ -551,10 +551,7 @@
 
   <div class="setup-header" style="flex-shrink:0">
     <div class="settings-title">HR Monitor</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="btn-fullscreen" id="hrm-fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen">&#x26F6;</button>
-      <button class="btn-dots" onclick="showScreen('screen-setup')" aria-label="Back">&#x2715;</button>
-    </div>
+    <button class="btn-fullscreen" id="hrm-fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen">&#x26F6;</button>
   </div>
 
   <div class="hrm-body">
@@ -583,6 +580,7 @@
 
   <div class="spacer"></div>
   <button class="btn btn-secondary" id="hrm-ble-btn" onclick="toggleBLE()" style="margin-bottom:8px">Connect HR Monitor</button>
+  <button class="btn btn-secondary" onclick="showScreen('screen-setup')">&#x2715;&nbsp;&nbsp;Close</button>
 
 </div>
 
@@ -1039,7 +1037,7 @@ function onHRData(event) {
 function buildPhases() {
   if (appMode === 'tabata') return buildTabataPhases();
   const phases = [];
-  if (warmupMins > 0) phases.push({ type:'warmup', duration:warmupMins*60 });
+  if (warmupSecs > 0) phases.push({ type:'warmup', duration:warmupSecs });
   for (let i=0; i<NUM_INTERVALS; i++) {
     phases.push({ type:'work', interval:i+1, duration:WORK_SECS });
     if (i < NUM_INTERVALS-1) phases.push({ type:'recovery', afterInterval:i+1, duration:RECOVERY_SECS });

@@ -18,6 +18,8 @@
 - Wake Lock API (screen stays on during workout)
 - Add to Home Screen install banner + PWA manifest + service worker
 - Summary screen (duration, avg HR, time in zone, per-interval breakdown)
+- Finish time display on workout screen ("Done at X:XX PM", updates every tick)
+- Settings & Tips screen (three-dot menu, birthday → auto-age via localStorage, 6 protocol tip cards sourced to Helgerud et al. 2007 / NTNU CERG, disclaimer)
 - Tabata mode (configurable work/rest/rounds, shares HR monitor + warmup)
 - Standalone HR Monitor screen (live BPM, zone coloring, session max/avg/min)
 

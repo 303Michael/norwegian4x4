@@ -23,12 +23,10 @@
 - Settings & Tips screen (three-dot menu, birthday → auto-age via localStorage, 6 protocol tip cards sourced to Helgerud et al. 2007 / NTNU CERG, disclaimer)
 - Tabata mode (configurable work/rest/rounds, shares HR monitor + warmup)
 - Standalone HR Monitor screen (live BPM, zone coloring, session max/avg/min, landscape layout)
-
-## To do
-- Create PNG icons (192×192, 512×512, 512×512 maskable) and add to icons/ folder — required for PWA install prompt to fire
+- PWA icons (SVG with any size + PNG fallbacks) — install prompt now fires
+- Fullscreen button on workout screen (⛶/⊡ toggle in header)
 
 ## Considering
-- Fullscreen API button on workout screen (hides status bar; standalone PWA mode already removes browser chrome)
 - Cooldown phase after last interval (adjustable duration, like warm-up)
 - Custom interval builder — define any number of phases with arbitrary durations and labels
 - Workout history saved to localStorage with a log screen

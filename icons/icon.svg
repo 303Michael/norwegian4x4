@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0a0a0f"/>
+  <radialGradient id="g" cx="50%" cy="50%" r="55%">
+    <stop offset="0%" stop-color="#c8ff00" stop-opacity="0.1"/>
+    <stop offset="100%" stop-color="#c8ff00" stop-opacity="0"/>
+  </radialGradient>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <text
+    x="256" y="315"
+    font-family="Impact, 'Arial Black', sans-serif"
+    font-size="260"
+    font-weight="900"
+    text-anchor="middle"
+    letter-spacing="8"
+    fill="#c8ff00">4×4</text>
+  <text
+    x="256" y="390"
+    font-family="Arial, sans-serif"
+    font-size="52"
+    font-weight="600"
+    text-anchor="middle"
+    letter-spacing="14"
+    fill="#c8ff00"
+    opacity="0.5">NORWEGIAN</text>
+</svg>

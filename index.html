@@ -551,7 +551,10 @@
 
   <div class="setup-header" style="flex-shrink:0">
     <div class="settings-title">HR Monitor</div>
-    <button class="btn-dots" onclick="showScreen('screen-setup')" aria-label="Back">✕</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn-fullscreen" id="hrm-fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen">&#x26F6;</button>
+      <button class="btn-dots" onclick="showScreen('screen-setup')" aria-label="Back">&#x2715;</button>
+    </div>
   </div>
 
   <div class="hrm-body">
@@ -1054,7 +1057,10 @@ function buildDots() {
 }
 
 function startWorkout() {
-  if (!maxHR) { alert('Please enter your age or max heart rate first.'); return; }
+  if (!maxHR) {
+    const age = parseInt(document.getElementById('age-input').value);
+    if (age) { selectFormula('tanaka'); } else { alert('Please enter your age or set a max heart rate to start.'); return; }
+  }
   try { getAudio().resume(); } catch(e) {}
   workoutPhases=buildPhases(); currentPhaseIdx=0;
   intervalStats=[]; currentIntervalHRs=[]; workoutStartTime=Date.now();
@@ -1295,8 +1301,11 @@ async function toggleFullscreen() {
   } catch(e) {}
 }
 document.addEventListener('fullscreenchange', () => {
-  const btn = document.getElementById('fullscreen-btn');
-  if (btn) btn.textContent = document.fullscreenElement ? '⊡' : '⛶';
+  const isFs = !!document.fullscreenElement;
+  const btn1 = document.getElementById('fullscreen-btn');
+  const btn2 = document.getElementById('hrm-fullscreen-btn');
+  if (btn1) btn1.innerHTML = isFs ? '&#x22A1;' : '&#x26F6;';
+  if (btn2) btn2.innerHTML = isFs ? '&#x22A1;' : '&#x26F6;';
 });
 
 // ════════════════════════════════════════════

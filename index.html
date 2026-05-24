@@ -579,8 +579,10 @@
   </div>
 
   <div class="spacer"></div>
-  <button class="btn btn-secondary" id="hrm-ble-btn" onclick="toggleBLE()" style="margin-bottom:8px">Connect HR Monitor</button>
-  <button class="btn btn-secondary" onclick="closeHRMonitor()">&#x2715;&nbsp;&nbsp;Close</button>
+  <div class="workout-controls">
+    <button class="btn btn-stop" onclick="closeHRMonitor()">&#x2715;</button>
+    <button class="btn btn-pause" id="hrm-ble-btn" onclick="toggleBLE()">Connect HR Monitor</button>
+  </div>
 
 </div>
 

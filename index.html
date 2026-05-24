@@ -911,12 +911,10 @@ async function connectBLE() {
   } catch(e) {
     if (e.name === 'NotFoundError') { setBLEStatus('disconnected'); return; }
     setBLEStatus('disconnected');
-    if (_isBrave) {
-      showBraveHelp();
-    } else {
-      document.getElementById('ble-status-text').textContent = 'Connection failed';
-      if (hrmIsActive()) hrmSetStatus('Connection failed — tap to try again', 'var(--zone-over)');
-    }
+    const msg = e.message ? `${e.name}: ${e.message}` : e.name || 'Unknown error';
+    document.getElementById('ble-status-text').textContent = msg;
+    if (hrmIsActive()) hrmSetStatus(msg, 'var(--zone-over)');
+    if (_isBrave && (e.name === 'SecurityError' || e.name === 'NotSupportedError')) showBraveHelp();
   }
 }
 

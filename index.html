@@ -457,11 +457,12 @@
     <div class="brave-help" id="brave-help">
       <div class="brave-help-title">Brave: enable Web Bluetooth</div>
       <ol>
-        <li>Tap the <strong>shield icon</strong> in the address bar → toggle <strong>Brave Shields OFF</strong> for this site → reload</li>
-        <li>Tap Connect — watch for a <strong>Brave permission prompt</strong> (may appear as a small bar at the top of the screen). Tap <strong>Allow</strong>.</li>
-        <li>If still blocked: type <strong>brave://flags</strong> in the address bar → search <strong>bluetooth</strong> → enable <strong>Web Bluetooth</strong> → relaunch</li>
+        <li>Type <strong>brave://flags</strong> in the address bar</li>
+        <li>Search for <strong>bluetooth</strong></li>
+        <li>Set <strong>Web Bluetooth API</strong> to <strong>Enabled</strong></li>
+        <li>Set <strong>Use the new permissions backend for Web Bluetooth</strong> to <strong>Enabled</strong></li>
+        <li>Click <strong>Relaunch</strong> at the bottom of the page, then tap Connect</li>
       </ol>
-      <div style="margin-top:8px;font-size:0.72rem;color:var(--muted)">If none of these work, Bluetooth is fully supported in <strong style="color:var(--text)">Chrome</strong>.</div>
     </div>
   </div>
 
@@ -732,7 +733,7 @@ let _isBrave = false;
     if (!navigator.bluetooth) {
       showBraveHelp();
     } else {
-      document.getElementById('ble-note').textContent = 'Brave detected — disable fingerprinting if connection fails.';
+      document.getElementById('ble-note').textContent = 'Brave detected — two flags required, see steps below if connection fails.';
     }
   }
 })();

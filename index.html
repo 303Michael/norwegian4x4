@@ -457,11 +457,11 @@
     <div class="brave-help" id="brave-help">
       <div class="brave-help-title">Brave: enable Web Bluetooth</div>
       <ol>
-        <li>Tap the <strong>orange shield icon</strong> in the address bar</li>
-        <li>Toggle <strong>Brave Shields</strong> to <strong>OFF</strong> for this site</li>
-        <li><strong>Reload</strong> the page, then tap Connect again</li>
+        <li>Tap the <strong>shield icon</strong> in the address bar → toggle <strong>Brave Shields OFF</strong> for this site → reload</li>
+        <li>Tap Connect — watch for a <strong>Brave permission prompt</strong> (may appear as a small bar at the top of the screen). Tap <strong>Allow</strong>.</li>
+        <li>If still blocked: type <strong>brave://flags</strong> in the address bar → search <strong>bluetooth</strong> → enable <strong>Web Bluetooth</strong> → relaunch</li>
       </ol>
-      <div style="margin-top:8px;font-size:0.72rem;color:var(--muted)">Disabling fingerprinting alone is not enough — Shields must be fully off. You can re-enable it after connecting.</div>
+      <div style="margin-top:8px;font-size:0.72rem;color:var(--muted)">If none of these work, Bluetooth is fully supported in <strong style="color:var(--text)">Chrome</strong>.</div>
     </div>
   </div>
 
@@ -882,22 +882,47 @@ function showBraveHelp() {
 
 async function connectBLE() {
   if (!navigator.bluetooth) {
-    if (_isBrave) {
-      showBraveHelp();
-    } else {
+    if (_isBrave) showBraveHelp();
+    else {
       document.getElementById('ble-status-text').textContent = 'Web Bluetooth not available';
       document.getElementById('ble-note').textContent = 'Please use Chrome on Android.';
       if (hrmIsActive()) hrmSetStatus('Web Bluetooth not available in this browser', 'var(--zone-over)');
     }
     return;
   }
+
+  // Pre-check: is Bluetooth hardware actually on?
   try {
-    setBLEStatus('scanning');
-    if (hrmIsActive()) hrmSetStatus('Scanning…');
+    const avail = await navigator.bluetooth.getAvailability();
+    if (!avail) {
+      const msg = 'Bluetooth is off — enable it in device settings';
+      document.getElementById('ble-status-text').textContent = msg;
+      if (hrmIsActive()) hrmSetStatus(msg, 'var(--zone-over)');
+      return;
+    }
+  } catch(e) {} // getAvailability not supported everywhere, ignore
+
+  setBLEStatus('scanning');
+  if (hrmIsActive()) hrmSetStatus('Scanning… (check for a permission prompt)');
+
+  // Timeout — catches Brave silently swallowing the picker
+  let timedOut = false;
+  const scanTimer = setTimeout(() => {
+    timedOut = true;
+    setBLEStatus('disconnected');
+    const msg = _isBrave ? 'Brave blocked the picker — see steps below' : 'Timed out waiting for device picker';
+    document.getElementById('ble-status-text').textContent = msg;
+    if (hrmIsActive()) hrmSetStatus(msg, 'var(--zone-over)');
+    if (_isBrave) showBraveHelp();
+  }, 15000);
+
+  try {
     bleDevice = await navigator.bluetooth.requestDevice({
       filters: [{ name:'CooSpo H808S' },{ namePrefix:'CooSpo' },{ namePrefix:'H808' },{ services:['heart_rate'] }],
       optionalServices: ['heart_rate']
     });
+    clearTimeout(scanTimer);
+    if (timedOut) return;
     bleDevice.addEventListener('gattserverdisconnected', onBLEDisconnect);
     if (hrmIsActive()) hrmSetStatus('Connecting…');
     const server = await bleDevice.gatt.connect();
@@ -908,12 +933,14 @@ async function connectBLE() {
     setBLEStatus('connected', bleDevice.name || 'HR Monitor');
     if (hrmIsActive()) hrmSetStatus('Connected — waiting for data…', 'var(--zone-target)');
   } catch(e) {
+    clearTimeout(scanTimer);
+    if (timedOut) return;
     if (e.name === 'NotFoundError') { setBLEStatus('disconnected'); return; }
     setBLEStatus('disconnected');
     const msg = e.message ? `${e.name}: ${e.message}` : e.name || 'Unknown error';
     document.getElementById('ble-status-text').textContent = msg;
     if (hrmIsActive()) hrmSetStatus(msg, 'var(--zone-over)');
-    if (_isBrave && (e.name === 'SecurityError' || e.name === 'NotSupportedError')) showBraveHelp();
+    if (_isBrave) showBraveHelp();
   }
 }
 

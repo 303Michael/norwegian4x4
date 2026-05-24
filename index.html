@@ -580,7 +580,7 @@
 
   <div class="spacer"></div>
   <button class="btn btn-secondary" id="hrm-ble-btn" onclick="toggleBLE()" style="margin-bottom:8px">Connect HR Monitor</button>
-  <button class="btn btn-secondary" onclick="showScreen('screen-setup')">&#x2715;&nbsp;&nbsp;Close</button>
+  <button class="btn btn-secondary" onclick="closeHRMonitor()">&#x2715;&nbsp;&nbsp;Close</button>
 
 </div>
 
@@ -716,7 +716,10 @@ let intervalStats = [], currentIntervalHRs = [];
 // ════════════════════════════════════════════
 async function requestWakeLock() {
   try {
-    if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
   } catch(e) {}
 }
 function releaseWakeLock() {
@@ -724,9 +727,9 @@ function releaseWakeLock() {
 }
 document.addEventListener('visibilitychange', async () => {
   if (wakeLock === null && document.visibilityState === 'visible') {
-    if (document.getElementById('screen-workout').classList.contains('active') && !isPaused) {
-      await requestWakeLock();
-    }
+    const onWorkout = document.getElementById('screen-workout').classList.contains('active') && !isPaused;
+    const onHRMonitor = document.getElementById('screen-hrmonitor').classList.contains('active');
+    if (onWorkout || onHRMonitor) await requestWakeLock();
   }
 });
 
@@ -1237,6 +1240,11 @@ function openHRMonitor() {
   syncHRMBleBtn();
   updateHRMonitorDisplay(currentHR);
   showScreen('screen-hrmonitor');
+  requestWakeLock();
+}
+function closeHRMonitor() {
+  releaseWakeLock();
+  showScreen('screen-setup');
 }
 
 function syncHRMBleBtn(state) {

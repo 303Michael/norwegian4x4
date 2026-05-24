@@ -434,9 +434,9 @@
     <div class="stepper-row">
       <label>Duration</label>
       <div class="stepper">
-        <button class="stepper-btn" onclick="adjustWarmup(-1)">−</button>
-        <div class="stepper-val" id="warmup-val">5 min</div>
         <button class="stepper-btn" onclick="adjustWarmup(1)">+</button>
+        <div class="stepper-val" id="warmup-val">5 min</div>
+        <button class="stepper-btn" onclick="adjustWarmup(-1)">−</button>
       </div>
     </div>
     <div class="warmup-note" id="warmup-note">Easy aerobic effort before first interval. Set to 0 to skip.</div>
@@ -457,11 +457,12 @@
     <div class="brave-help" id="brave-help">
       <div class="brave-help-title">Brave: enable Web Bluetooth</div>
       <ol>
-        <li>Tap the <strong>lion icon</strong> in the address bar</li>
-        <li>Tap <strong>Advanced controls</strong></li>
-        <li>Set <strong>Block fingerprinting</strong> to <strong>Allow fingerprinting</strong></li>
+        <li>Tap the <strong>orange shield icon</strong> in the address bar (Brave Shields)</li>
+        <li>Tap <strong>Advanced controls</strong> if you see it, otherwise look for <strong>Fingerprinting</strong> directly</li>
+        <li>Change <strong>Fingerprinting</strong> to <strong>Allow fingerprinting</strong></li>
         <li><strong>Reload</strong> the page, then tap Connect again</li>
       </ol>
+      <div style="margin-top:8px;font-size:0.72rem;color:var(--muted)">Don't see a shield icon? Go to Brave <strong style="color:var(--text)">Settings → Privacy → Fingerprinting blocking → Off</strong></div>
     </div>
   </div>
 
@@ -647,7 +648,8 @@
 // ════════════════════════════════════════════
 let maxHR = 0, selectedFormula = null;
 let bleDevice = null, bleChar = null, currentHR = 0, bleConnected = false;
-let warmupMins = 5;
+const WARMUP_STEPS = [0, 15, 30, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900];
+let warmupSecs = 300;
 let wakeLock = null;
 let deferredA2HS = null;
 
@@ -690,7 +692,7 @@ function adjustTabata(which, delta) {
 
 function buildTabataPhases() {
   const phases = [];
-  if (warmupMins > 0) phases.push({ type: 'warmup', duration: warmupMins * 60 });
+  if (warmupSecs > 0) phases.push({ type: 'warmup', duration: warmupSecs });
   for (let i = 0; i < tabataRounds; i++) {
     phases.push({ type: 'work', interval: i + 1, duration: tabataWorkSecs });
     if (i < tabataRounds - 1) phases.push({ type: 'recovery', afterInterval: i + 1, duration: tabataRestSecs });
@@ -843,10 +845,17 @@ function setMaxHR(hr) {
 // ════════════════════════════════════════════
 // WARMUP STEPPER
 // ════════════════════════════════════════════
+function warmupLabel(secs) {
+  if (secs === 0) return 'Off';
+  if (secs < 60) return secs + ' sec';
+  return (secs / 60) + ' min';
+}
+
 function adjustWarmup(delta) {
-  warmupMins = Math.max(0, Math.min(15, warmupMins + delta));
-  document.getElementById('warmup-val').textContent = warmupMins === 0 ? 'Off' : `${warmupMins} min`;
-  document.getElementById('warmup-note').textContent = warmupMins === 0
+  const idx = WARMUP_STEPS.indexOf(warmupSecs);
+  warmupSecs = WARMUP_STEPS[Math.max(0, Math.min(WARMUP_STEPS.length - 1, idx + delta))];
+  document.getElementById('warmup-val').textContent = warmupLabel(warmupSecs);
+  document.getElementById('warmup-note').textContent = warmupSecs === 0
     ? 'Workout starts directly with Interval 1.'
     : 'Easy aerobic effort before first interval. Set to 0 to skip.';
 }

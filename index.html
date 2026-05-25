@@ -477,8 +477,8 @@
     <button class="a2hs-dismiss" onclick="dismissA2HS()" aria-label="Dismiss">×</button>
   </div>
 
-  <button class="btn btn-secondary" onclick="openHRMonitor()" style="margin-bottom:8px">HR Monitor</button>
   <button class="btn btn-primary" onclick="startWorkout()">Start Workout</button>
+  <button class="btn btn-secondary" onclick="openHRMonitor()" style="margin-top:8px">HR Display</button>
   <div class="text-muted mt-8" id="workout-subtitle" style="text-align:center;font-size:0.72rem">
     4 × 4 min work · 3 min recovery · 85–95% max HR
   </div>
@@ -550,7 +550,7 @@
 <div id="screen-hrmonitor" class="screen">
 
   <div class="setup-header" style="flex-shrink:0">
-    <div class="settings-title">HR Monitor</div>
+    <div class="settings-title">HR Display</div>
     <button class="btn-fullscreen" id="hrm-fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen">&#x26F6;</button>
   </div>
 
@@ -581,7 +581,7 @@
   <div class="spacer"></div>
   <div class="workout-controls">
     <button class="btn btn-stop" onclick="closeHRMonitor()">&#x2715;</button>
-    <button class="btn btn-pause" id="hrm-ble-btn" onclick="toggleBLE()">Connect HR Monitor</button>
+    <button class="btn btn-pause" id="hrm-ble-btn" onclick="toggleBLE()">Connect HR Display</button>
   </div>
 
 </div>
@@ -1255,7 +1255,7 @@ function syncHRMBleBtn(state) {
   if (state === 'scanning') {
     btn.textContent = 'Scanning…'; btn.disabled = true;
   } else {
-    btn.textContent = bleConnected ? 'Disconnect' : 'Connect HR Monitor';
+    btn.textContent = bleConnected ? 'Disconnect' : 'Connect HR Display';
     btn.disabled = false;
   }
 }

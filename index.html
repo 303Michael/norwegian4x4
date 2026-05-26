@@ -197,11 +197,9 @@
   .zone-text { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; transition: color 0.4s; }
   .hr-range  { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; margin-top: 2px; }
 
-  .zone-indicator { display: none; }
-  .zi-seg { border-radius: 3px; background: var(--border); transition: background 0.4s; }
-  .zi-seg.active      { background: var(--accent); }
-  .zi-seg.active-low  { background: var(--zone-low); }
-  .zi-seg.active-over { background: var(--zone-over); }
+  .zone-bar-v { display: none; position: relative; width: 10px; align-self: stretch; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .zv-fill { position: absolute; bottom: 0; left: 0; right: 0; height: 0%; border-radius: 6px; transition: height 0.5s ease, background 0.4s; }
+  .zv-mark { position: absolute; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.25); }
 
   /* Controls */
   .workout-controls { display: flex; gap: 10px; flex-shrink: 0; }
@@ -245,15 +243,8 @@
       margin-bottom: 0;
     }
 
-    /* Middle: vertical zone bar */
-    .zone-indicator {
-      display: flex;
-      flex-direction: column-reverse;
-      gap: 4px;
-      width: 14px;
-      align-self: stretch;
-      flex-shrink: 0;
-    }
+    /* Middle: smooth vertical zone bar */
+    .zone-bar-v { display: block; }
 
     /* Right half: HR — hide labels redundant in landscape */
     .hr-block {
@@ -443,7 +434,7 @@
 
     <div class="manual-row">
       <label>Or enter manually</label>
-      <input type="number" id="manual-hr" min="100" max="230" placeholder="190">
+      <input type="number" id="manual-hr" min="60" max="230" placeholder="190">
     </div>
     <div class="hr-zone-preview" id="zone-preview" style="display:none">
       <div class="zone-chip" style="background:rgba(58,123,213,0.15);color:var(--zone-low)">
@@ -532,12 +523,10 @@
       <div class="timer-display" id="timer-display">5:00</div>
     </div>
 
-  <div class="zone-indicator" id="zone-indicator">
-    <div class="zi-seg" id="zi0"></div>
-    <div class="zi-seg" id="zi1"></div>
-    <div class="zi-seg" id="zi2"></div>
-    <div class="zi-seg" id="zi3"></div>
-    <div class="zi-seg" id="zi4"></div>
+  <div class="zone-bar-v" id="zone-bar-v">
+    <div class="zv-fill" id="zv-fill"></div>
+    <div class="zv-mark" style="bottom:70%"></div>
+    <div class="zv-mark" style="bottom:50%"></div>
   </div>
 
     <div class="hr-block" id="hr-block">
@@ -866,7 +855,7 @@ function applyManualHR() {
     selectedFormula = null;
     document.querySelectorAll('.formula-card').forEach(c=>c.classList.remove('selected'));
     document.querySelectorAll('.formula-desc').forEach(d=>d.classList.remove('visible'));
-    if (v >= 100 && v <= 230) setMaxHR(v);
+    if (v >= 60 && v <= 230) setMaxHR(v);
   }
 }
 document.getElementById('manual-hr').addEventListener('input', applyManualHR);
@@ -1193,22 +1182,25 @@ function updateWorkoutHR(hr) {
   const el=document.getElementById('wk-hr'), block=document.getElementById('hr-block');
   const zoneText=document.getElementById('zone-text');
   const zbs=[0,1,2,3,4].map(i=>document.getElementById('zb'+i));
-  const zis=[0,1,2,3,4].map(i=>document.getElementById('zi'+i));
+  const fill=document.getElementById('zv-fill');
   el.textContent = hr>0 ? hr : '—';
   zbs.forEach(z=>z.className='zb');
-  zis.forEach(z=>{if(z)z.className='zi-seg';});
 
   if (!maxHR || hr===0) {
     block.className='hr-block'; el.style.color='var(--muted)'; zoneText.style.color='var(--muted)';
-    zoneText.textContent = bleConnected ? 'Waiting for data…' : 'No monitor connected'; return;
+    zoneText.textContent = bleConnected ? 'Waiting for data…' : 'No monitor connected';
+    if(fill) fill.style.height='0%';
+    return;
   }
 
   const pct=hr/maxHR, lo=0.85, hi=0.95;
   const filled=Math.max(0,Math.min(5,Math.round(((pct-0.6)/0.5)*5)));
   const cls = pct<lo ? 'active-low' : pct>hi ? 'active-over' : 'active';
-  for (let i=0;i<filled;i++) {
-    zbs[i].classList.add(cls);
-    if(zis[i]) zis[i].classList.add(cls);
+  for (let i=0;i<filled;i++) zbs[i].classList.add(cls);
+
+  if(fill) {
+    fill.style.height = Math.max(0,Math.min(100,(pct-0.6)/0.5*100))+'%';
+    fill.style.background = pct<lo ? 'var(--zone-low)' : pct>hi ? 'var(--zone-over)' : 'var(--accent)';
   }
 
   if (pct<lo) {

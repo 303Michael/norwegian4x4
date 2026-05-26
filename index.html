@@ -226,8 +226,8 @@
     /* Left half: timer */
     .timer-block {
       flex: 1;
-      justify-content: flex-start;
-      padding: 16px 16px 10px;
+      justify-content: center;
+      padding: 10px 16px;
       background: var(--surface);
       border: 2px solid var(--border);
       border-radius: 12px;
@@ -255,18 +255,20 @@
       flex-shrink: 0;
     }
 
-    /* Right half: HR */
+    /* Right half: HR — hide labels redundant in landscape */
     .hr-block {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 16px 24px 10px;
+      justify-content: center;
+      padding: 10px 24px;
       width: auto;
       margin: 0;
       border-radius: 12px;
     }
+    .hr-bpm  { display: none; }
+    .zone-bar { display: none; }
 
     .hr-value {
       font-size: clamp(4rem, 32vh, 14rem);
@@ -858,14 +860,17 @@ document.getElementById('age-input').addEventListener('input', function() {
   if (selectedFormula) setMaxHR({fox,tanaka,gulati}[selectedFormula]);
 });
 
-document.getElementById('manual-hr').addEventListener('input', function() {
+function applyManualHR() {
   const v = parseInt(this.value);
-  if (v >= 100 && v <= 230) {
+  if (this.value.trim()) {
     selectedFormula = null;
     document.querySelectorAll('.formula-card').forEach(c=>c.classList.remove('selected'));
-    setMaxHR(v);
+    document.querySelectorAll('.formula-desc').forEach(d=>d.classList.remove('visible'));
+    if (v >= 100 && v <= 230) setMaxHR(v);
   }
-});
+}
+document.getElementById('manual-hr').addEventListener('input', applyManualHR);
+document.getElementById('manual-hr').addEventListener('change', applyManualHR);
 
 function selectFormula(formula) {
   selectedFormula = formula;

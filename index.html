@@ -195,6 +195,13 @@
   .zb.active-over { background: var(--zone-over); }
 
   .zone-text { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; transition: color 0.4s; }
+  .hr-range  { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; margin-top: 2px; }
+
+  .zone-indicator { display: none; }
+  .zi-seg { border-radius: 3px; background: var(--border); transition: background 0.4s; }
+  .zi-seg.active      { background: var(--accent); }
+  .zi-seg.active-low  { background: var(--zone-low); }
+  .zi-seg.active-over { background: var(--zone-over); }
 
   /* Controls */
   .workout-controls { display: flex; gap: 10px; flex-shrink: 0; }
@@ -216,18 +223,36 @@
       gap: 12px;
     }
 
-    /* Left half: timer — card to match HR block */
+    /* Left half: timer */
     .timer-block {
       flex: 1;
-      justify-content: center;
-      padding: 10px 16px;
+      justify-content: flex-start;
+      padding: 16px 16px 10px;
       background: var(--surface);
       border: 2px solid var(--border);
       border-radius: 12px;
     }
 
+    /* Number first, label below in landscape */
     .timer-display {
-      font-size: clamp(4rem, 34vh, 16rem);
+      font-size: clamp(4rem, 32vh, 14rem);
+      order: 1;
+    }
+    .phase-name {
+      font-size: 0.72rem;
+      order: 2;
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
+
+    /* Middle: vertical zone bar */
+    .zone-indicator {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 4px;
+      width: 14px;
+      align-self: stretch;
+      flex-shrink: 0;
     }
 
     /* Right half: HR */
@@ -236,7 +261,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
+      padding: 16px 24px 10px;
       width: auto;
       margin: 0;
       border-radius: 12px;
@@ -246,7 +272,6 @@
       font-size: clamp(4rem, 32vh, 14rem);
     }
 
-    .phase-name { font-size: 0.72rem; }
     .workout-header { margin-bottom: 2px; }
   }
 
@@ -505,9 +530,18 @@
       <div class="timer-display" id="timer-display">5:00</div>
     </div>
 
+  <div class="zone-indicator" id="zone-indicator">
+    <div class="zi-seg" id="zi0"></div>
+    <div class="zi-seg" id="zi1"></div>
+    <div class="zi-seg" id="zi2"></div>
+    <div class="zi-seg" id="zi3"></div>
+    <div class="zi-seg" id="zi4"></div>
+  </div>
+
     <div class="hr-block" id="hr-block">
       <div class="hr-value" id="wk-hr">—</div>
       <div class="hr-bpm">BPM</div>
+      <div class="hr-range" id="hr-range"></div>
       <div class="zone-bar">
         <div class="zb" id="zb0"></div>
         <div class="zb" id="zb1"></div>
@@ -852,6 +886,8 @@ function setMaxHR(hr) {
   document.getElementById('zp-low').textContent=`< ${lo}`;
   document.getElementById('zp-target').textContent=`${lo}–${hi}`;
   document.getElementById('zp-over').textContent=`> ${hi}`;
+  const rangeEl=document.getElementById('hr-range');
+  if (rangeEl) rangeEl.textContent=`${lo}–${hi}`;
 }
 
 // ════════════════════════════════════════════
@@ -1152,8 +1188,10 @@ function updateWorkoutHR(hr) {
   const el=document.getElementById('wk-hr'), block=document.getElementById('hr-block');
   const zoneText=document.getElementById('zone-text');
   const zbs=[0,1,2,3,4].map(i=>document.getElementById('zb'+i));
+  const zis=[0,1,2,3,4].map(i=>document.getElementById('zi'+i));
   el.textContent = hr>0 ? hr : '—';
   zbs.forEach(z=>z.className='zb');
+  zis.forEach(z=>{if(z)z.className='zi-seg';});
 
   if (!maxHR || hr===0) {
     block.className='hr-block'; el.style.color='var(--muted)'; zoneText.style.color='var(--muted)';
@@ -1163,7 +1201,10 @@ function updateWorkoutHR(hr) {
   const pct=hr/maxHR, lo=0.85, hi=0.95;
   const filled=Math.max(0,Math.min(5,Math.round(((pct-0.6)/0.5)*5)));
   const cls = pct<lo ? 'active-low' : pct>hi ? 'active-over' : 'active';
-  for (let i=0;i<filled;i++) zbs[i].classList.add(cls);
+  for (let i=0;i<filled;i++) {
+    zbs[i].classList.add(cls);
+    if(zis[i]) zis[i].classList.add(cls);
+  }
 
   if (pct<lo) {
     block.className='hr-block zone-low'; el.style.color='var(--zone-low)';

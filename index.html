@@ -918,7 +918,7 @@ function hrmSetStatus(msg, color='var(--muted)') {
 }
 
 function showBraveHelp() {
-  if (hrmIsActive()) showScreen('screen-setup');
+  if (hrmIsActive()) closeHRMonitor();
   const panel = document.getElementById('brave-help');
   panel.classList.add('visible');
   document.getElementById('ble-note').textContent = 'Web Bluetooth is blocked — follow the steps below.';
@@ -1290,6 +1290,8 @@ function openHRMonitor() {
   updateHRMonitorDisplay(currentHR);
   updateHRMClock();
   hrmClockInterval = setInterval(updateHRMClock, 1000);
+  const clk = document.getElementById('hrm-clock');
+  if (clk) clk.style.display = document.fullscreenElement ? '' : 'none';
   showScreen('screen-hrmonitor');
   requestWakeLock();
 }

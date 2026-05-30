@@ -511,7 +511,6 @@
   <div class="workout-header">
     <div class="phase-label" id="wk-phase-label">Warm-up</div>
     <div class="finish-time">Done at <span id="finish-time">—</span></div>
-    <div class="finish-time" id="wk-clock" style="display:none"><span id="wk-clock-time">—</span></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="interval-dots" id="interval-dots"></div>
       <button class="btn-fullscreen" id="fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen">⛶</button>
@@ -576,7 +575,10 @@
 <div id="screen-hrmonitor" class="screen">
 
   <div class="setup-header" style="flex-shrink:0">
-    <div class="settings-title">HR Display</div>
+    <div>
+      <div class="settings-title">HR Display</div>
+      <div class="finish-time" id="hrm-clock" style="display:none"><span id="hrm-clock-time">—</span></div>
+    </div>
     <button class="btn-fullscreen" id="hrm-fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen">&#x26F6;</button>
   </div>
 
@@ -693,6 +695,7 @@ const WORK_SECS = 4 * 60, RECOVERY_SECS = 3 * 60, NUM_INTERVALS = 4;
 let appMode = 'n44';
 let tabataWorkSecs = 20, tabataRestSecs = 10, tabataRounds = 8;
 let hrmSessionHRs = [];
+let hrmClockInterval = null;
 
 function getNumIntervals() { return appMode === 'tabata' ? tabataRounds : NUM_INTERVALS; }
 
@@ -1145,10 +1148,6 @@ function updateWorkoutUI(phase) {
   document.getElementById('finish-time').textContent =
     `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;
 
-  const now=new Date(), nh=now.getHours(), nm=now.getMinutes();
-  const clkEl=document.getElementById('wk-clock-time');
-  if(clkEl) clkEl.textContent=`${nh%12||12}:${String(nm).padStart(2,'0')} ${nh<12?'AM':'PM'}`;
-
   const skipBtn=document.getElementById('skip-btn');
   skipBtn.style.display = (phase.type==='warmup' && timeLeft>10) ? 'block' : 'none';
 
@@ -1279,15 +1278,25 @@ function goSetup() { showScreen('screen-setup'); }
 // ════════════════════════════════════════════
 // HR MONITOR
 // ════════════════════════════════════════════
+function updateHRMClock() {
+  const el = document.getElementById('hrm-clock-time');
+  if (!el) return;
+  const now = new Date(), h = now.getHours(), m = now.getMinutes();
+  el.textContent = `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;
+}
+
 function openHRMonitor() {
   hrmSessionHRs = [];
   ['hrm-max','hrm-avg','hrm-min'].forEach(id => document.getElementById(id).textContent = '—');
   syncHRMBleBtn();
   updateHRMonitorDisplay(currentHR);
+  updateHRMClock();
+  hrmClockInterval = setInterval(updateHRMClock, 1000);
   showScreen('screen-hrmonitor');
   requestWakeLock();
 }
 function closeHRMonitor() {
+  if (hrmClockInterval) { clearInterval(hrmClockInterval); hrmClockInterval = null; }
   releaseWakeLock();
   showScreen('screen-setup');
 }
@@ -1357,7 +1366,7 @@ document.addEventListener('fullscreenchange', () => {
   const btn2 = document.getElementById('hrm-fullscreen-btn');
   if (btn1) btn1.innerHTML = isFs ? '&#x22A1;' : '&#x26F6;';
   if (btn2) btn2.innerHTML = isFs ? '&#x22A1;' : '&#x26F6;';
-  const clk = document.getElementById('wk-clock');
+  const clk = document.getElementById('hrm-clock');
   if (clk) clk.style.display = isFs ? '' : 'none';
 });
 

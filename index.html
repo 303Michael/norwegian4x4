@@ -18,7 +18,7 @@
     --surface: #13131a;
     --border: #1e1e2e;
     --text: #e8e8f0;
-    --muted: #5a5a7a;
+    --muted: #8888a8;
     --accent: #c8ff00;
     --zone-low: #3a7bd5;
     --zone-target: #c8ff00;
@@ -511,6 +511,7 @@
   <div class="workout-header">
     <div class="phase-label" id="wk-phase-label">Warm-up</div>
     <div class="finish-time">Done at <span id="finish-time">—</span></div>
+    <div class="finish-time" id="wk-clock" style="display:none"><span id="wk-clock-time">—</span></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="interval-dots" id="interval-dots"></div>
       <button class="btn-fullscreen" id="fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen">⛶</button>
@@ -1144,6 +1145,10 @@ function updateWorkoutUI(phase) {
   document.getElementById('finish-time').textContent =
     `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;
 
+  const now=new Date(), nh=now.getHours(), nm=now.getMinutes();
+  const clkEl=document.getElementById('wk-clock-time');
+  if(clkEl) clkEl.textContent=`${nh%12||12}:${String(nm).padStart(2,'0')} ${nh<12?'AM':'PM'}`;
+
   const skipBtn=document.getElementById('skip-btn');
   skipBtn.style.display = (phase.type==='warmup' && timeLeft>10) ? 'block' : 'none';
 
@@ -1352,6 +1357,8 @@ document.addEventListener('fullscreenchange', () => {
   const btn2 = document.getElementById('hrm-fullscreen-btn');
   if (btn1) btn1.innerHTML = isFs ? '&#x22A1;' : '&#x26F6;';
   if (btn2) btn2.innerHTML = isFs ? '&#x22A1;' : '&#x26F6;';
+  const clk = document.getElementById('wk-clock');
+  if (clk) clk.style.display = isFs ? '' : 'none';
 });
 
 // ════════════════════════════════════════════

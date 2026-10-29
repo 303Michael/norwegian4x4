@@ -783,6 +783,12 @@ let _isBrave = false;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredA2HS = e;
+  // Brave on Android can only make a browser shortcut, not a real app install
+  if (navigator.brave && /Android/.test(navigator.userAgent)) {
+    document.querySelector('#a2hs-banner .a2hs-text').innerHTML =
+      '<strong>Add Shortcut</strong>Brave can only add a shortcut. For a full app install, open this in Chrome.';
+    document.getElementById('a2hs-install-btn').textContent = 'Add';
+  }
   document.getElementById('a2hs-banner').classList.add('visible');
 });
 window.addEventListener('appinstalled', () => {
